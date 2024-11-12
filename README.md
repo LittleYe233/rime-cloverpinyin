@@ -77,7 +77,7 @@ python依赖的库： [jieba](https://github.com/fxsjy/jieba)、[pypinyin](https
 如果是 archlinux 用户，可用下面命令快速安装这些依赖
 
 ```shell
-pacman -S python-jieba pypinyin opencc python-requests
+sudo pacman -S --needed python-jieba pypinyin opencc python-requests git-lfs git librime
 ```
 
 下载工具（三者任意一个均可）： [aria2](http://aria2.sourceforge.net/)、[wget](https://www.gnu.org/software/wget/wget.html)、[curl](https://curl.haxx.se/)
