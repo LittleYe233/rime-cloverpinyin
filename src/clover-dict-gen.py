@@ -1,29 +1,34 @@
 #!/usr/bin/env python
 #-*- encoding:utf-8 -*-
 
+from warnings import warn
 import jieba
 import pypinyin
 import opencc
 
 import argparse
-import os
 import sys
+from typing import Any, Callable, Text, cast
 
 # 从 pypinyin 库里得到所有文字及其若干个拼音
-pinyin_dict = pypinyin.pinyin_dict.pinyin_dict
-replace_symbol_to_no_symbol = pypinyin.style._utils.replace_symbol_to_no_symbol
-initials_set = set(pypinyin.style._constants._INITIALS)   # 声母表
+pinyin_dict = cast(dict[int, Text], pypinyin.pinyin_dict.pinyin_dict) # pyright: ignore[reportAttributeAccessIssue]
+replace_symbol_to_no_symbol = cast(Callable[[Text], Text], pypinyin.style._utils.replace_symbol_to_no_symbol) # pyright: ignore[reportAttributeAccessIssue]
+initials_set: set[Text] = set(pypinyin.style._constants._INITIALS) # pyright: ignore[reportAttributeAccessIssue]   # 声母表
 initials_set.add('ng')
 
 # 修复一些多音字错误
 pypinyin.load_phrases_dict({
-    '还珠格格': [['huán'], ['zhū'], ['gé'], ['gé']]
+    '还珠格格': [['huán'], ['zhū'], ['gé'], ['gé']],
+    '帧': [['zhēn']],
+    '炔': [['quē']]
     })
 
 
 
 class DictGenerator:
-    def fixPinyin(self, pinyin):
+    phrase_r: dict[Text, int]
+
+    def fixPinyin(self, pinyin: Text) -> Text | None:
         """
             检查拼音，规范化拼音，失败则返回 None
                 因为输入法里不允许出现单声母的拼音，
@@ -107,7 +112,7 @@ class DictGenerator:
         """
         self.phrase_r = {}
 
-    def mergeDict(self, text, weight = 1, min_freq = 0, callbackCount = sys.maxsize, callbackFunc = None):
+    def mergeDict(self, text: Text, weight = 1, min_freq = 0, callbackCount = sys.maxsize, callbackFunc: Callable[[int, int], Any] | None = None):
         """
             将 text 里储存的词频、字频内容合并到数据结构中
             text: 原始文本，会自动过滤掉拼音和其它字符
@@ -136,7 +141,7 @@ class DictGenerator:
             if freq < min_freq:
                 skip_count += 1
                 count = word_count + parse_count + skip_count
-                if count % callbackCount == 0:
+                if callbackFunc is not None and count % callbackCount == 0:
                     callbackFunc(count, len(text_s))
                 continue
 
@@ -166,7 +171,9 @@ class DictGenerator:
                 if key in self.word_dict:
                     self.word_dict[key] += freq
                 else:
-                    sys.stderr.write('新的字音： %s\t%s\n' % key)
+                    # NOTE: 應該沒有必要輸出
+                    #sys.stderr.write('新的字音： %s\t%s\n' % key)
+                    pass
                 word_count += 1
 
             # 如果是词组，则合并到 self.phrase_r 里
@@ -220,6 +227,10 @@ class DictGenerator:
         for phrase_st in phrase_list:
             # 通过 pypinyin 库获取到词组的拼音
             phrase_pinyin = map(self.fixPinyin, pypinyin.lazy_pinyin(phrase_st[0]))
+            if None in phrase_pinyin:
+                warn('Illegal pinyin: ' + phrase_st[0] + ' -> ' + phrase_pinyin.__repr__())
+                continue
+            phrase_pinyin = cast(list[Text], list(phrase_pinyin))
             text_phrase += phrase_st[0] + '\t' + \
                 ' '.join(phrase_pinyin) + '\t' + \
                 str(phrase_st[1]) + '\n'

@@ -47,4 +47,3 @@ rime_deployer --compile clover.schema.yaml . /usr/share/rime-data
 rm -rf build/*.txt || true
 
 echo "Patching ..."
-sed -i 's/帧\tzheng/帧\tzhen/g' clover.base.dict.yaml
