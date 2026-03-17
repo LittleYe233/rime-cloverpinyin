@@ -45,5 +45,3 @@ cp ../cache/opencc/* opencc
 echo "开始构建部署二进制"
 rime_deployer --compile clover.schema.yaml . /usr/share/rime-data
 rm -rf build/*.txt || true
-
-echo "Patching ..."

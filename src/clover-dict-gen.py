@@ -7,8 +7,8 @@ import pypinyin
 import opencc
 
 import argparse
-import sys
-from typing import Any, Callable, Text, cast
+from typing import Callable, Text, cast
+from tqdm import tqdm
 
 # 从 pypinyin 库里得到所有文字及其若干个拼音
 pinyin_dict = cast(dict[int, Text], pypinyin.pinyin_dict.pinyin_dict) # pyright: ignore[reportAttributeAccessIssue]
@@ -76,6 +76,7 @@ class DictGenerator:
         self.word_pinyin_s = {i:
             list(map(symbol2fixPinyin, pinyin_dict[i].split(',')))
             for i in pinyin_dict
+            if i <= 0xFFFF and not (0xD800 <= i <= 0xDFFF)
             }
 
         """
@@ -112,7 +113,7 @@ class DictGenerator:
         """
         self.phrase_r = {}
 
-    def mergeDict(self, text: Text, weight = 1, min_freq = 0, callbackCount = sys.maxsize, callbackFunc: Callable[[int, int], Any] | None = None):
+    def mergeDict(self, text: Text, weight = 1, min_freq = 0, desc: Text | None = None):
         """
             将 text 里储存的词频、字频内容合并到数据结构中
             text: 原始文本，会自动过滤掉拼音和其它字符
@@ -120,6 +121,7 @@ class DictGenerator:
                     字或词组\t其它信息\t频率
             weight: 权值，该词库的频率乘以此权值再合并
             min_freq: 最小频率，小于该频率的词会被过滤掉
+            desc: 进度条描述信息
             返回值: 成功合并的数目元组，格式为 (word_count, parse_count)
         """
 
@@ -128,7 +130,7 @@ class DictGenerator:
         skip_count = 0
 
         text_s = text.split('\n')
-        for line in text_s:
+        for line in tqdm(text_s, desc=desc):
             v = tuple(map(lambda e:e.strip(), line.split('\t')))
 
             # 将最后一列视为频率，如果不是则默认为 1
@@ -140,15 +142,17 @@ class DictGenerator:
             # 过滤掉词频过小的词
             if freq < min_freq:
                 skip_count += 1
-                count = word_count + parse_count + skip_count
-                if callbackFunc is not None and count % callbackCount == 0:
-                    callbackFunc(count, len(text_s))
                 continue
 
             # 将第一列视为汉字或词组，如果不是则跳过这一行（break）
             word = None
             for c in v[0]:
                 if ord(c) not in self.word_pinyin_s:
+                    break
+                # 过滤掉超出基本多文种平面的字符（BMP，即 U+0000 到 U+FFFF）
+                # 以及代理对字符（Surrogates，U+D800 到 U+DFFF）
+                # 解决某些环境下 librime 编译时对扩展区字符的 Encode failure 问题
+                if ord(c) > 0xFFFF or 0xD800 <= ord(c) <= 0xDFFF:
                     break
             else:
                 word = v[0]
@@ -179,16 +183,14 @@ class DictGenerator:
             # 如果是词组，则合并到 self.phrase_r 里
             else:
                 word = self.t2s.convert(word)  # 确保词组为简体
+                # 再次检查转换后的词组是否包含非 BMP 字符
+                if any(ord(c) > 0xFFFF or 0xD800 <= ord(c) <= 0xDFFF for c in word):
+                    continue
                 if word in self.phrase_r:
                     self.phrase_r[word] += freq
                 else:
                     self.phrase_r[word] = freq
                 parse_count += 1
-
-            if callbackFunc is not None:
-                count = word_count + parse_count + skip_count
-                if count % callbackCount == 0:
-                    callbackFunc(count, len(text_s))
 
         return (word_count, parse_count)
 
@@ -207,24 +209,19 @@ class DictGenerator:
             text_dict += word_st[0] + '\t' + word_st[1] + '\t' + str(word_st[2]) + '\n'
         return text_dict
 
-    def getParseDictText(self, callbackCount = sys.maxsize, callbackFunc = None):
+    def getParseDictText(self, desc: Text | None = None):
         """
             生成词组的 rime 字典文本
             由于词典量较大，所以需要显示转换进度
-            callbackCount 为每过几个词调用一次 callbackFunc
-            callbackFunc 是回调函数，自定义如何处理进度
-                格式为 callbackFunc(count, total_count)
-                    count 为当前已处理的个数
-                    total_count 为总共数量
+            desc 为进度条描述信息
         """
         # 按频率倒序排序
         phrase_list = [(phrase, self.phrase_r[phrase]) for phrase in self.phrase_r]
         phrase_list.sort(key = lambda w: w[1], reverse = True)
 
         # 生成文本
-        count = 0
         text_phrase = ''
-        for phrase_st in phrase_list:
+        for phrase_st in tqdm(phrase_list, desc=desc):
             # 通过 pypinyin 库获取到词组的拼音
             phrase_pinyin = map(self.fixPinyin, pypinyin.lazy_pinyin(phrase_st[0]))
             if None in phrase_pinyin:
@@ -234,10 +231,6 @@ class DictGenerator:
             text_phrase += phrase_st[0] + '\t' + \
                 ' '.join(phrase_pinyin) + '\t' + \
                 str(phrase_st[1]) + '\n'
-            count += 1
-            if callbackFunc is not None:
-                if count % callbackCount == 0:
-                    callbackFunc(count, len(phrase_list))
         return text_phrase
 
 
@@ -248,35 +241,25 @@ def main(args):
     #open('clover.phrase.dict.yaml', 'w', encoding = 'UTF-8').write(text_phrase)
     generator = DictGenerator()
 
-    class PrintProcess:
-        def __init__(self, msg):
-            self.msg = msg
-        def process(self, count, total):
-            print(self.msg % (count, total))
-
     # 合并 360万 的词库
     text = open('词典360万（个人整理）.txt', 'r', encoding = 'utf-8').read()
-    r = generator.mergeDict(text, 1, args.minfreq, 100000,
-        PrintProcess('正在合并360万中文词库 (%s/%s)').process)
+    r = generator.mergeDict(text, 1, args.minfreq, '合并360万中文词库')
     print('成功合并360万中文词库 %s 个汉字， %s 个词组。' % r)
 
     # 合并 rime 自带的八股文，权值 60
     text = open('essay.txt', 'r', encoding = 'utf-8').read()
-    r = generator.mergeDict(text, 60, 0, 100000,
-        PrintProcess('正在合并八股文 (%s/%s)').process)
+    r = generator.mergeDict(text, 60, args.minfreq, '合并八股文')
     print('成功合并八股文 %s 个汉字， %s 个词组。' % r)
 
     # 合并袖珍简化字拼音的词库，权值 60
     text = open('pinyin_simp.dict.yaml', 'r', encoding = 'utf-8').read(
         ).replace('罗嗦', '啰嗦')
-    r = generator.mergeDict(text, 60, 0, 100000,
-        PrintProcess('正在合并袖珍简化字拼音的词库 (%s/%s)').process)
+    r = generator.mergeDict(text, 60, args.minfreq, '合并袖珍简化字拼音的词库')
     print('成功合并袖珍简化字拼音 %s 个汉字， %s 个词组。' % r)
 
     # 合并转换符号词汇
     text = open('symbols.txt', 'r', encoding = 'utf-8').read()
-    r = generator.mergeDict(text, 10000, 0, 100000,
-        PrintProcess('正在合并符号词汇 (%s/%s)').process)
+    r = generator.mergeDict(text, 10000, 0, '合并符号词汇')
     print('成功合并符号词汇 %s 个汉字， %s 个词组。' % r)
 
     word_dict_name = 'clover.base'
@@ -324,9 +307,7 @@ name: %s
 version: "1.0.0"
 sort: by_weight
 ...
-""" % parse_dict_name + generator.getParseDictText(
-        10000,
-        PrintProcess('正在取得每个词组的拼音 (%s/%s)').process)
+""" % parse_dict_name + generator.getParseDictText('取得每个词组的拼音')
 
 
     open(word_dict_name + '.dict.yaml', 'w').write(word_dict_text)
