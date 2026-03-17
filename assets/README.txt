@@ -1,0 +1,1 @@
+This folder stores static data (i.e. Sogou dictionary binary file) that is updated periodically without fixed hash and unfriendly to some OSes (i.e. NixOS) not supporting skipped hashes. For other distros, use real-time fetched data instead.
