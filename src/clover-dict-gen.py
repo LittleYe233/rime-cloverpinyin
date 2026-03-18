@@ -223,7 +223,7 @@ class DictGenerator:
         text_phrase = ''
         for phrase_st in tqdm(phrase_list, desc=desc):
             # 通过 pypinyin 库获取到词组的拼音
-            phrase_pinyin = map(self.fixPinyin, pypinyin.lazy_pinyin(phrase_st[0]))
+            phrase_pinyin = list(map(self.fixPinyin, pypinyin.lazy_pinyin(phrase_st[0])))
             if None in phrase_pinyin:
                 warn('Illegal pinyin: ' + phrase_st[0] + ' -> ' + phrase_pinyin.__repr__())
                 continue
@@ -261,6 +261,11 @@ def main(args):
     text = open('symbols.txt', 'r', encoding = 'utf-8').read()
     r = generator.mergeDict(text, 10000, 0, '合并符号词汇')
     print('成功合并符号词汇 %s 个汉字， %s 个词组。' % r)
+
+    # 合并中文维基百科词汇
+    with open('zhwiki.txt', 'r', encoding='utf-8') as f:
+        r = generator.mergeDict(f.read(), 1, args.minfreq, '合并中文维基词汇')
+    print('成功合并中文维基词汇 %s 个汉字， %s 个词组。' % r)
 
     word_dict_name = 'clover.base'
     parse_dict_name = 'clover.phrase'

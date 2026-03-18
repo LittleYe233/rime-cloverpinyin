@@ -23,6 +23,7 @@ cat ../rime-emoji/opencc/*.txt opencc/*.txt | opencc -c t2s.json | uniq > symbol
 ln -sf "../rime-essay/essay.txt" .
 ln -sf "../chinese-dictionary-3.6million/词典360万（个人整理）.txt" .
 ln -sf "../rime-pinyin-simp/pinyin_simp.dict.yaml" .
+../rime-zhwiki/convert.py --dest zhwiki.txt
 ../src/clover-dict-gen.py --minfreq="$minfreq"
 while read -r file; do
   echo "转换 $file"
