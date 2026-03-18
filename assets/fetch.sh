@@ -7,6 +7,7 @@ DOWNLOAD_TARGETS=(
     "https://dumps.wikimedia.org/zhwikisource/20260301/zhwikisource-20260301-all-titles-in-ns0.gz|zhwikisource.gz"
     "https://dumps.wikimedia.org/zhwiktionary/20260301/zhwiktionary-20260301-all-titles-in-ns0.gz|zhwiktionary.gz"
     "https://dumps.wikimedia.org/zhwiki/20260301/zhwiki-20260301-all-titles-in-ns0.gz|zhwiki.gz"
+    "https://github.com/outloudvi/mw2fcitx/releases/download/20260315/moegirl.dict.yaml|moegirl.dict.yaml"
 )
 TIMESTAMP=$(date +%s)
 JSON_ENTRIES=()

@@ -1,6 +1,7 @@
 [
-  {"filename":"sogou_new_words.scel","url":"https://pinyin.sogou.com/d/dict/download_cell.php?id=4&name=%E7%BD%91%E7%BB%9C%E6%B5%81%E8%A1%8C%E6%96%B0%E8%AF%8D%E3%80%90%E5%AE%98%E6%96%B9%E6%8E%A8%E8%8D%90%E3%80%91&f=detail","hash":"7b40e33ce40cc896bf0e24f88066d8371b9558bb1b45f4bb6558dab70dcd9c7a","timestamp":1773785441},
-  {"filename":"zhwikisource.gz","url":"https://dumps.wikimedia.org/zhwikisource/20260301/zhwikisource-20260301-all-titles-in-ns0.gz","hash":"09bf4ed21f4f4ceb2c03726aa8cacedf6b6444e2a54667d62c5d585f974d9ea4","timestamp":1773785441},
-  {"filename":"zhwiktionary.gz","url":"https://dumps.wikimedia.org/zhwiktionary/20260301/zhwiktionary-20260301-all-titles-in-ns0.gz","hash":"d3be4ae1741e0138a383d31a4398f1dc5247117fd12910db12cfdb8661c9fca5","timestamp":1773785441},
-  {"filename":"zhwiki.gz","url":"https://dumps.wikimedia.org/zhwiki/20260301/zhwiki-20260301-all-titles-in-ns0.gz","hash":"b0809a936a78b42bc34517a5a032ae3e67f493cc93ad13a404d34162bd339d52","timestamp":1773785441}
+  {"filename":"sogou_new_words.scel","url":"https://pinyin.sogou.com/d/dict/download_cell.php?id=4&name=%E7%BD%91%E7%BB%9C%E6%B5%81%E8%A1%8C%E6%96%B0%E8%AF%8D%E3%80%90%E5%AE%98%E6%96%B9%E6%8E%A8%E8%8D%90%E3%80%91&f=detail","hash":"bac4570d57e30fc885bb9c46ba7e3754769e55500456af62c19bfc8472d17826","timestamp":1773822791},
+  {"filename":"zhwikisource.gz","url":"https://dumps.wikimedia.org/zhwikisource/20260301/zhwikisource-20260301-all-titles-in-ns0.gz","hash":"09bf4ed21f4f4ceb2c03726aa8cacedf6b6444e2a54667d62c5d585f974d9ea4","timestamp":1773822791},
+  {"filename":"zhwiktionary.gz","url":"https://dumps.wikimedia.org/zhwiktionary/20260301/zhwiktionary-20260301-all-titles-in-ns0.gz","hash":"d3be4ae1741e0138a383d31a4398f1dc5247117fd12910db12cfdb8661c9fca5","timestamp":1773822791},
+  {"filename":"zhwiki.gz","url":"https://dumps.wikimedia.org/zhwiki/20260301/zhwiki-20260301-all-titles-in-ns0.gz","hash":"b0809a936a78b42bc34517a5a032ae3e67f493cc93ad13a404d34162bd339d52","timestamp":1773822791},
+  {"filename":"moegirl.dict.yaml","url":"https://github.com/outloudvi/mw2fcitx/releases/download/20260315/moegirl.dict.yaml","hash":"88d44342c0e0f06e7c9929039f3a065157d65f761ecc8595c25e4224c281fb01","timestamp":1773822791}
 ]
